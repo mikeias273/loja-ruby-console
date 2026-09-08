@@ -2,32 +2,65 @@ require 'json'
 
 ARQUIVO_PRODUTOS = 'produtos.json'
 
-# Função para carregar os produtos do arquivo JSON
+# --- FUNÇÕES AUXILIARES DE TRATAMENTO DE ERROS ---
+
+# Lê e garante que o usuário digitou um número inteiro válido
+def ler_inteiro(mensagem)
+  loop do
+    print mensagem
+    entrada = gets.chomp
+    return entrada.to_i if entrada =~ /^\d+$/
+
+    puts "--> [ERRO] Entrada invalida! Digite apenas numeros inteiros."
+  end
+end
+
+# Lê e garante que o usuário digitou um número decimal válido (ex: 10 ou 10.5)
+def ler_float(mensagem)
+  loop do
+    print mensagem
+    entrada = gets.chomp.tr(',', '.')
+    if entrada =~ /^\d+(\.\d+)?$/ && entrada.to_f > 0
+      return entrada.to_f
+    end
+
+    puts "--> [ERRO] Preco invalido! Digite um valor numérico maior que zero (ex: 12.50)."
+  end
+end
+
+# --- FUNÇÕES DE PERSISTÊNCIA ---
+
 def carregar_produtos
   if File.exist?(ARQUIVO_PRODUTOS)
-    conteudo = File.read(ARQUIVO_PRODUTOS)
-    dados = JSON.parse(conteudo)
-    dados.transform_keys(&:to_i)
+    begin
+      conteudo = File.read(ARQUIVO_PRODUTOS)
+      dados = JSON.parse(conteudo)
+      dados.transform_keys(&:to_i)
+    rescue JSON::ParserError
+      puts "--> [ERRO] O arquivo JSON esta corrompido! Iniciando base vazia."
+      {}
+    end
   else
     puts "Arquivo de produtos nao encontrado!"
     {}
   end
 end
 
-# Função para salvar as alterações no arquivo JSON
 def salvar_produtos(produtos)
   File.write(ARQUIVO_PRODUTOS, JSON.pretty_generate(produtos))
+rescue StandardError => e
+  puts "--> [ERRO] Nao foi possivel salvar no arquivo: #{e.message}"
 end
 
-# 1. CARREGANDO BANCO DE DADOS
-produtos = carregar_produtos
+# --- INICIALIZAÇÃO DO SISTEMA ---
 
-# 2. VARIÁVEIS DE SESSÃO
+produtos = carregar_produtos
 carrinho = []
 total_compra = 0
 opcao = 0
 
-# 3. LOOP PRINCIPAL DO SISTEMA
+# --- LOOP PRINCIPAL ---
+
 while opcao != 6
   system("clear")
   puts "===================================="
@@ -40,15 +73,19 @@ while opcao != 6
   puts "5 - Painel do Administrador (Gestao)"
   puts "6 - Sair"
   puts "===================================="
-  print "Escolha uma opcao: "
-  opcao = gets.chomp.to_i
+
+  opcao = ler_inteiro("Escolha uma opcao: ")
 
   case opcao
   when 1
     system("clear")
     puts "--- PRODUTOS DISPONIVEIS ---"
-    produtos.each do |id, item|
-      puts "#{id} - #{item['nome']} | Preco: R$ #{item['preco']} | Estoque: #{item['estoque']} un"
+    if produtos.empty?
+      puts "Nenhum produto cadastrado no momento."
+    else
+      produtos.each do |id, item|
+        puts "#{id} - #{item['nome']} | Preco: R$ #{item['preco']} | Estoque: #{item['estoque']} un"
+      end
     end
     puts "\nPressione ENTER para voltar ao menu..."
     gets
@@ -60,19 +97,16 @@ while opcao != 6
       puts "#{id} - #{item['nome']} (R$ #{item['preco']}) - Estoque: #{item['estoque']}"
     end
 
-    print "\nDigite o numero do produto desejado: "
-    id_produto = gets.chomp.to_i
+    id_produto = ler_inteiro("\nDigite o numero do produto desejado: ")
 
     if produtos.key?(id_produto)
       produto = produtos[id_produto]
 
-      print "Quantas unidades de #{produto['nome']} voce quer? "
-      qtd = gets.chomp.to_i
+      qtd = ler_inteiro("Quantas unidades de #{produto['nome']} voce quer? ")
 
       if qtd <= 0
-        puts "\nQuantidade invalida!"
+        puts "\n--> [ERRO] A quantidade deve ser maior que zero!"
       elsif qtd <= produto['estoque']
-        # Abate do estoque na memória e salva no JSON
         produto['estoque'] -= qtd
         salvar_produtos(produtos)
 
@@ -86,7 +120,7 @@ while opcao != 6
         puts "\n--> Ops! Estoque insuficiente. Temos apenas #{produto['estoque']} unidades disponiveis."
       end
     else
-      puts "\nProduto nao encontrado!"
+      puts "\n--> [ERRO] Produto nao encontrado!"
     end
 
     puts "\nPressione ENTER para voltar ao menu..."
@@ -98,9 +132,7 @@ while opcao != 6
     if carrinho.empty?
       puts "O seu carrinho esta vazio!"
     else
-      carrinho.each do |item|
-        puts "- #{item}"
-      end
+      carrinho.each { |item| puts "- #{item}" }
       puts "-------------------------------"
       puts "Total parcial: R$ #{total_compra}"
     end
@@ -145,8 +177,8 @@ while opcao != 6
     puts "2 - Adicionar Estoque (Repor)"
     puts "3 - Voltar ao Menu Principal"
     puts "===================================="
-    print "Escolha uma opcao: "
-    sub_opcao = gets.chomp.to_i
+
+    sub_opcao = ler_inteiro("Escolha uma opcao: ")
 
     case sub_opcao
     when 1
@@ -155,13 +187,9 @@ while opcao != 6
       print "Nome do produto: "
       nome = gets.chomp
 
-      print "Preco (R$): "
-      preco = gets.chomp.to_f
+      preco = ler_float("Preco (R$): ")
+      estoque = ler_inteiro("Quantidade em estoque: ")
 
-      print "Quantidade em estoque: "
-      estoque = gets.chomp.to_i
-
-      # Gera o novo ID automaticamente (maior ID atual + 1)
       novo_id = produtos.keys.empty? ? 1 : produtos.keys.max + 1
 
       produtos[novo_id] = {
@@ -180,25 +208,23 @@ while opcao != 6
         puts "#{id} - #{item['nome']} (Estoque atual: #{item['estoque']})"
       end
 
-      print "\nDigite o ID do produto para repor estoque: "
-      id_prod = gets.chomp.to_i
+      id_prod = ler_inteiro("\nDigite o ID do produto para repor estoque: ")
 
       if produtos.key?(id_prod)
-        print "Quantidade a adicionar ao estoque: "
-        qtd_add = gets.chomp.to_i
+        qtd_add = ler_inteiro("Quantidade a adicionar ao estoque: ")
 
         if qtd_add > 0
           produtos[id_prod]['estoque'] += qtd_add
           salvar_produtos(produtos)
           puts "\n--> Estoque de '#{produtos[id_prod]['nome']}' atualizado para #{produtos[id_prod]['estoque']} un!"
         else
-          puts "\nQuantidade invalida!"
+          puts "\n--> [ERRO] A quantidade deve ser maior que zero!"
         end
       else
-        puts "\nProduto nao encontrado!"
+        puts "\n--> [ERRO] Produto nao encontrado!"
       end
     when 3
-      # Apenas volta
+      # Retorna ao menu principal
     else
       puts "\nOpcao invalida!"
     end
@@ -209,7 +235,7 @@ while opcao != 6
   when 6
     puts "\nSaindo do sistema... Ate logo!"
   else
-    puts "\nOpcao invalida! Pressione ENTER para tentar novamente..."
+    puts "\n--> Opcao invalida! Pressione ENTER para tentar novamente..."
     gets
   end
 end
