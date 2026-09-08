@@ -23,5 +23,10 @@
     "nome": "Bolacha",
     "preco": 5,
     "estoque": 20
+  },
+  "6": {
+    "nome": "Macarrão",
+    "preco": 7.0,
+    "estoque": 15
   }
 }

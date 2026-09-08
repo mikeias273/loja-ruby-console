@@ -6,7 +6,6 @@ ARQUIVO_PRODUTOS = 'produtos.json'
 def carregar_produtos
   if File.exist?(ARQUIVO_PRODUTOS)
     conteudo = File.read(ARQUIVO_PRODUTOS)
-    # Converte as chaves do JSON para números inteiros para manter o padrão
     dados = JSON.parse(conteudo)
     dados.transform_keys(&:to_i)
   else
@@ -15,7 +14,7 @@ def carregar_produtos
   end
 end
 
-# Função para salvar as alterações de estoque no arquivo JSON
+# Função para salvar as alterações no arquivo JSON
 def salvar_produtos(produtos)
   File.write(ARQUIVO_PRODUTOS, JSON.pretty_generate(produtos))
 end
@@ -29,7 +28,7 @@ total_compra = 0
 opcao = 0
 
 # 3. LOOP PRINCIPAL DO SISTEMA
-while opcao != 5
+while opcao != 6
   system("clear")
   puts "===================================="
   puts "       LOJA VIRTUAL - MENU          "
@@ -38,7 +37,8 @@ while opcao != 5
   puts "2 - Comprar Produto"
   puts "3 - Ver Carrinho de Compras"
   puts "4 - Finalizar Compra (Checkout)"
-  puts "5 - Sair"
+  puts "5 - Painel do Administrador (Gestao)"
+  puts "6 - Sair"
   puts "===================================="
   print "Escolha uma opcao: "
   opcao = gets.chomp.to_i
@@ -72,11 +72,10 @@ while opcao != 5
       if qtd <= 0
         puts "\nQuantidade invalida!"
       elsif qtd <= produto['estoque']
-        # Abate do estoque na memória e salva no arquivo JSON
+        # Abate do estoque na memória e salva no JSON
         produto['estoque'] -= qtd
         salvar_produtos(produtos)
 
-        # Calcula subtotal e atualiza carrinho
         subtotal = produto['preco'] * qtd
         total_compra += subtotal
         carrinho << "#{qtd}x #{produto['nome']} - R$ #{subtotal}"
@@ -138,6 +137,76 @@ while opcao != 5
     gets
 
   when 5
+    system("clear")
+    puts "===================================="
+    puts "      PAINEL DO ADMINISTRADOR       "
+    puts "===================================="
+    puts "1 - Cadastrar Novo Produto"
+    puts "2 - Adicionar Estoque (Repor)"
+    puts "3 - Voltar ao Menu Principal"
+    puts "===================================="
+    print "Escolha uma opcao: "
+    sub_opcao = gets.chomp.to_i
+
+    case sub_opcao
+    when 1
+      system("clear")
+      puts "--- CADASTRAR NOVO PRODUTO ---"
+      print "Nome do produto: "
+      nome = gets.chomp
+
+      print "Preco (R$): "
+      preco = gets.chomp.to_f
+
+      print "Quantidade em estoque: "
+      estoque = gets.chomp.to_i
+
+      # Gera o novo ID automaticamente (maior ID atual + 1)
+      novo_id = produtos.keys.empty? ? 1 : produtos.keys.max + 1
+
+      produtos[novo_id] = {
+        'nome' => nome,
+        'preco' => preco,
+        'estoque' => estoque
+      }
+
+      salvar_produtos(produtos)
+      puts "\n--> Produto '#{nome}' cadastrado com sucesso com ID #{novo_id}!"
+
+    when 2
+      system("clear")
+      puts "--- REPOR ESTOQUE ---"
+      produtos.each do |id, item|
+        puts "#{id} - #{item['nome']} (Estoque atual: #{item['estoque']})"
+      end
+
+      print "\nDigite o ID do produto para repor estoque: "
+      id_prod = gets.chomp.to_i
+
+      if produtos.key?(id_prod)
+        print "Quantidade a adicionar ao estoque: "
+        qtd_add = gets.chomp.to_i
+
+        if qtd_add > 0
+          produtos[id_prod]['estoque'] += qtd_add
+          salvar_produtos(produtos)
+          puts "\n--> Estoque de '#{produtos[id_prod]['nome']}' atualizado para #{produtos[id_prod]['estoque']} un!"
+        else
+          puts "\nQuantidade invalida!"
+        end
+      else
+        puts "\nProduto nao encontrado!"
+      end
+    when 3
+      # Apenas volta
+    else
+      puts "\nOpcao invalida!"
+    end
+
+    puts "\nPressione ENTER para continuar..."
+    gets
+
+  when 6
     puts "\nSaindo do sistema... Ate logo!"
   else
     puts "\nOpcao invalida! Pressione ENTER para tentar novamente..."
