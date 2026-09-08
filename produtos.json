@@ -1,0 +1,27 @@
+{
+  "1": {
+    "nome": "Arroz",
+    "preco": 10,
+    "estoque": 7
+  },
+  "2": {
+    "nome": "Feijao",
+    "preco": 12,
+    "estoque": 8
+  },
+  "3": {
+    "nome": "Cafe",
+    "preco": 15,
+    "estoque": 2
+  },
+  "4": {
+    "nome": "Leite",
+    "preco": 6,
+    "estoque": 12
+  },
+  "5": {
+    "nome": "Bolacha",
+    "preco": 5,
+    "estoque": 20
+  }
+}

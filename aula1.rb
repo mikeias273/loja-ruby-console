@@ -1,11 +1,27 @@
-# 1. BANCO DE DADOS DE PRODUTOS
-produtos = {
-  1 => { nome: "Arroz",   preco: 10, estoque: 10 },
-  2 => { nome: "Feijao",  preco: 12, estoque: 8 },
-  3 => { nome: "Cafe",    preco: 15, estoque: 5 },
-  4 => { nome: "Leite",   preco: 6,  estoque: 12 },
-  5 => { nome: "Bolacha", preco: 5,  estoque: 20 }
-}
+require 'json'
+
+ARQUIVO_PRODUTOS = 'produtos.json'
+
+# Função para carregar os produtos do arquivo JSON
+def carregar_produtos
+  if File.exist?(ARQUIVO_PRODUTOS)
+    conteudo = File.read(ARQUIVO_PRODUTOS)
+    # Converte as chaves do JSON para números inteiros para manter o padrão
+    dados = JSON.parse(conteudo)
+    dados.transform_keys(&:to_i)
+  else
+    puts "Arquivo de produtos nao encontrado!"
+    {}
+  end
+end
+
+# Função para salvar as alterações de estoque no arquivo JSON
+def salvar_produtos(produtos)
+  File.write(ARQUIVO_PRODUTOS, JSON.pretty_generate(produtos))
+end
+
+# 1. CARREGANDO BANCO DE DADOS
+produtos = carregar_produtos
 
 # 2. VARIÁVEIS DE SESSÃO
 carrinho = []
@@ -32,7 +48,7 @@ while opcao != 5
     system("clear")
     puts "--- PRODUTOS DISPONIVEIS ---"
     produtos.each do |id, item|
-      puts "#{id} - #{item[:nome]} | Preco: R$ #{item[:preco]} | Estoque: #{item[:estoque]} un"
+      puts "#{id} - #{item['nome']} | Preco: R$ #{item['preco']} | Estoque: #{item['estoque']} un"
     end
     puts "\nPressione ENTER para voltar ao menu..."
     gets
@@ -41,7 +57,7 @@ while opcao != 5
     system("clear")
     puts "--- REALIZAR COMPRA ---"
     produtos.each do |id, item|
-      puts "#{id} - #{item[:nome]} (R$ #{item[:preco]}) - Estoque: #{item[:estoque]}"
+      puts "#{id} - #{item['nome']} (R$ #{item['preco']}) - Estoque: #{item['estoque']}"
     end
 
     print "\nDigite o numero do produto desejado: "
@@ -50,24 +66,25 @@ while opcao != 5
     if produtos.key?(id_produto)
       produto = produtos[id_produto]
 
-      print "Quantas unidades de #{produto[:nome]} voce quer? "
+      print "Quantas unidades de #{produto['nome']} voce quer? "
       qtd = gets.chomp.to_i
 
       if qtd <= 0
         puts "\nQuantidade invalida!"
-      elsif qtd <= produto[:estoque]
-        # Abate do estoque
-        produto[:estoque] -= qtd
+      elsif qtd <= produto['estoque']
+        # Abate do estoque na memória e salva no arquivo JSON
+        produto['estoque'] -= qtd
+        salvar_produtos(produtos)
 
         # Calcula subtotal e atualiza carrinho
-        subtotal = produto[:preco] * qtd
+        subtotal = produto['preco'] * qtd
         total_compra += subtotal
-        carrinho << "#{qtd}x #{produto[:nome]} - R$ #{subtotal}"
+        carrinho << "#{qtd}x #{produto['nome']} - R$ #{subtotal}"
 
-        puts "\n--> Sucesso: #{qtd}x #{produto[:nome]} adicionado(s) ao carrinho!"
+        puts "\n--> Sucesso: #{qtd}x #{produto['nome']} adicionado(s) ao carrinho!"
         puts "--> Subtotal do item: R$ #{subtotal}"
       else
-        puts "\n--> Ops! Estoque insuficiente. Temos apenas #{produto[:estoque]} unidades disponiveis."
+        puts "\n--> Ops! Estoque insuficiente. Temos apenas #{produto['estoque']} unidades disponiveis."
       end
     else
       puts "\nProduto nao encontrado!"
@@ -103,7 +120,6 @@ while opcao != 5
       puts "-------------------------------"
       puts "Subtotal acumulado: R$ #{total_compra}"
 
-      # Aplicação do Desconto
       if total_compra > 100
         desconto = total_compra * 0.10
         total_final = total_compra - desconto
@@ -113,7 +129,6 @@ while opcao != 5
         puts "TOTAL A PAGAR: R$ #{total_compra}"
       end
 
-      # Zerando carrinho e compras após fechar pedido
       carrinho.clear
       total_compra = 0
       puts "\nObrigado pela compra! Volte sempre."
