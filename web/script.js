@@ -1,9 +1,24 @@
 const TELEFONE_LOJA = "5585994017943";
 
 const produtos = [
-  { id: 1, nome: "Marcador de Página (Personalizado)", preco: 12.00 },
-  { id: 2, nome: "Chaveiro QR Code Instagram", preco: 18.00 },
-  { id: 3, nome: "Caneta Decorada", preco: 15.00 }
+  { 
+    id: 1, 
+    nome: "Marcador de Página (Personalizado)", 
+    preco: 12.00,
+    imagem: "imagens/marcador.jpg"
+  },
+  { 
+    id: 2, 
+    nome: "Chaveiro QR Code Instagram", 
+    preco: 18.00,
+    imagem: "imagens/chaveiro.jpg"
+  },
+  { 
+    id: 3, 
+    nome: "Caneta Decorada", 
+    preco: 15.00,
+    imagem: "imagens/caneta.jpg"
+  }
 ];
 
 let carrinho = [];
@@ -16,6 +31,7 @@ function carregarProdutos() {
     const card = document.createElement("div");
     card.classList.add("card-produto");
     card.innerHTML = `
+      <img src="${prod.imagem}" alt="${prod.nome}" class="foto-produto">
       <h3>${prod.nome}</h3>
       <p class="preco">R$ ${prod.preco.toFixed(2)}</p>
       <input type="text" id="detalhe-${prod.id}" placeholder="Detalhes (ex: Tema, Nome)">
@@ -53,7 +69,7 @@ function atualizarCarrinho() {
 
   let total = 0;
 
-  carrinho.forEach((item, index) => {
+  carrinho.forEach((item) => {
     total += item.preco;
     const div = document.createElement("div");
     div.classList.add("item-carrinho");
@@ -88,7 +104,7 @@ function enviarWhatsapp() {
   let texto = `Olá! Meu nome é *${nomeCliente}* e gostaria de fazer o seguinte pedido:\n\n`;
   let total = 0;
 
-  carrinho.forEach((item, i) => {
+  carrinho.forEach((item) => {
     texto += `• *${item.nome}* - R$ ${item.preco.toFixed(2)}\n`;
     texto += `  Detalhe: _${item.detalhe}_\n`;
     total += item.preco;
