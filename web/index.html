@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Papelaria Papelie - Catálogo Digital</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Papelaria Papelie</h1>
+    <p>Papelaria Afetiva & Personalizados ✨</p>
+  </header>
+
+  <main class="container">
+    <section class="produtos">
+      <h2>Nossos Produtos</h2>
+      <div id="lista-produtos" class="grid-produtos">
+        <!-- Produtos serão inseridos via JS -->
+      </div>
+    </section>
+
+    <aside class="carrinho">
+      <h2>Seu Pedido</h2>
+      <div id="itens-carrinho">
+        <p class="carrinho-vazio">Seu carrinho está vazio.</p>
+      </div>
+      
+      <div class="total-container">
+        <strong>Total: R$ <span id="valor-total">0.00</span></strong>
+      </div>
+
+      <div class="dados-cliente">
+        <label for="nome-cliente">Seu Nome:</label>
+        <input type="text" id="nome-cliente" placeholder="Digite seu nome completo">
+      </div>
+
+      <button id="btn-whatsapp" onclick="enviarWhatsapp()">
+        Finalizar Pedido via WhatsApp 💬
+      </button>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
